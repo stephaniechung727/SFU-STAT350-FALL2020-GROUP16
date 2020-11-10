@@ -1,0 +1,2 @@
+# SFU-STAT350-FALL2020-GROUP16
+Final project for STAT 350
