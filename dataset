@@ -1,0 +1,7 @@
+mynames = c("fixed acidity", "volatile acidity", "citric acid", "residual sugar", "chlorides", "free sulfur dioxide", "total sulfur dioxide", "density", "pH", "sulphates", "alcohol", "quality")
+
+whitewine = read.csv2("winequality-white.csv", header = FALSE, skip = 1)
+names(whitewine) = mynames
+
+redwine = read.csv2("winequality-red.csv", header = FALSE, skip = 1)
+names(redwine) = mynames
