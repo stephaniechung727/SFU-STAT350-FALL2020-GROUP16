@@ -1,7 +1,8 @@
 ---
-title: "TEST TEST"
+title: "STAT350 Final Project - Team 16"
 output: html_document
 ---
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -10,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(latexpdf)
 library(stringr)
 library(ggplot2)
+library(gridExtra)
 ```
 # Abstract
 This is where the abstract will take place
@@ -74,115 +76,238 @@ We now introduced the median point as a new point to the red wine quality data.
 Now for the last step before going into fitting the model into a linear model, we will generate several histograms for the all the variables. This will help us see the approximate relationship between each varibles and wine quality.
 
 ```{r}
-ggplot(aes(quality), data = red.wine) +
+hist_y = ggplot(aes(quality), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 1) +
-  ggtitle('Histogram of Quality')
+  ggtitle('Histogram of Quality') + theme(plot.title = element_text(size=9))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(fixed.acidity), data = red.wine) +
+hist_x1 = ggplot(aes(fixed.acidity), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.2) +
-  ggtitle('Histogram of Fixed Acidity')
-
+  ggtitle('Histogram of Fixed Acidity') + theme(plot.title = element_text(size=8))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(volatile.acidity), data = red.wine) +
+hist_x2 = ggplot(aes(volatile.acidity), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.02) +
-  ggtitle('Histogram of Volatile Acidity')
+  ggtitle('Histogram of Volatile Acidity') + theme(plot.title = element_text(size=7.5))
 ```
-<br />
-
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(citric.acid), data = red.wine) +
+hist_x3 = ggplot(aes(citric.acid), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.05) +
-  ggtitle('Histogram of Citric Acid')
+  ggtitle('Histogram of Citric Acid') + theme(plot.title = element_text(size=8))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(residual.sugar), data = red.wine) +
+hist_x4 = ggplot(aes(residual.sugar), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.5) +
-  ggtitle('Histogram of Residual Sugar')
+  ggtitle('Histogram of Residual Sugar') + theme(plot.title = element_text(size=6.7))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(chlorides), data = red.wine) +
+hist_x5 = ggplot(aes(chlorides), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.05) +
-  ggtitle('Histogram of Chlorides')
+  ggtitle('Histogram of Chlorides') + theme(plot.title = element_text(size=8.5))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(free.sulfur.dioxide), data = red.wine) +
+hist_x6 = ggplot(aes(free.sulfur.dioxide), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 3) +
-  ggtitle('Histogram of Free Sulfur Dioxide')
+  ggtitle('Histogram of Free Sulfur Dioxide') + theme(plot.title = element_text(size=6))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(total.sulfur.dioxide), data = red.wine) +
+hist_x7 = ggplot(aes(total.sulfur.dioxide), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 8) +
-  ggtitle('Histogram of Total Sulfur Dioxide')
+  ggtitle('Histogram of Total Sulfur Dioxide') + theme(plot.title = element_text(size=6))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(density), data = red.wine) +
+hist_x8 = ggplot(aes(density), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.0005) +
-  ggtitle('Histogram of Density')
+  ggtitle('Histogram of Density') + theme(plot.title = element_text(size=9))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(pH), data = red.wine) +
+hist_x9 = ggplot(aes(pH), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.02) +
-  ggtitle('Histogram of pH')
+  ggtitle('Histogram of pH') + theme(plot.title = element_text(size=9))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(sulphates), data = red.wine) +
+hist_x10 = ggplot(aes(sulphates), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.1) +
-  ggtitle('Histogram of Sulphates')
+  ggtitle('Histogram of Sulphates') + theme(plot.title = element_text(size=8))
 ```
-<br />
 
-Comments on the histogram.
 
 ```{r}
-ggplot(aes(alcohol), data = red.wine) +
+hist_x11 = ggplot(aes(alcohol), data = red.wine) +
   geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.3) +
-  ggtitle('Histogram of Alcohol')
+  ggtitle('Histogram of Alcohol') + theme(plot.title = element_text(size=9))
+```
+
+
+```{r}
+grid.arrange(hist_y, hist_x1, hist_x2, hist_x3, hist_x4, hist_x5, hist_x6, hist_x7, hist_x8, hist_x9, hist_x10, hist_x11, ncol = 4)
 ```
 <br />
 
 Comments on the histogram.
 
 <br />
+
+
+> Data Visualization - Regressors vs. Predictor
+
+Now for the last step before going into fitting the model into a linear model, we will plot each of the regressors against the predictor. This will help us see the approximate relationship between each varibles and wine quality.
+
+```{r}
+group_x1 = ggplot(aes(fixed.acidity, quality), data = red.wine) + 
+  ggtitle("Fixed Acidity vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+```
+
+```{r}
+group_x2 = ggplot(aes(volatile.acidity, quality), data = red.wine) + 
+  ggtitle("Volatile Acidity vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=8.5))
+```
+
+```{r}
+group_x3 = ggplot(aes(quality, citric.acid), data = red.wine) + 
+  ggtitle("Citric Acid vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+```
+
+```{r}
+group_x4 = ggplot(aes(quality, residual.sugar), data = red.wine) + 
+  ggtitle("Residual Sugar vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=8))
+```
+
+```{r}
+group_x5 = ggplot(aes(quality, chlorides), data = red.wine) + 
+  ggtitle("Chlorides vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+```
+
+```{r}
+group_x6 = ggplot(aes(quality, free.sulfur.dioxide), data = red.wine) + 
+  ggtitle("Free Sulfur Dioxide vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=7))
+```
+
+```{r}
+group_x7 = ggplot(aes(quality, total.sulfur.dioxide), data = red.wine) + 
+  ggtitle("Total Sulfur Dioxide vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=6.5))
+```
+
+```{r}
+group_x8 = ggplot(aes(quality, density), data = red.wine) + 
+  ggtitle("Density vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+```
+
+```{r}
+group_x9 = ggplot(aes(quality, pH), data = red.wine) + 
+  ggtitle("pH vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") +  
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+```
+
+```{r}
+group_x10 = ggplot(aes(quality, sulphates), data = red.wine) + 
+  ggtitle("Sulphates vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+```
+
+```{r}
+group_x11 = ggplot(aes(quality, alcohol), data = red.wine) + 
+  ggtitle("Alcohol vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+```
+
+```{r, message = FALSE}
+grid.arrange(hist_y, group_x1, group_x2, group_x3, group_x4, group_x5, group_x6, group_x7, group_x8, group_x9, group_x10, group_x11, ncol = 4)
+```
+<br />
+
+Comments on the grouped plots.
+
+<br />
+
+
+```{r}
+box_x1 = ggplot(aes(quality, fixed.acidity), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") +
+  ggtitle("Boxplot of Fixed Acidity vs Quality") + theme(plot.title = element_text(size=6))
+
+box_x2 = ggplot(aes(quality, volatile.acidity), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") +
+  ggtitle("Boxplot of Volatile Acidity vs Quality") + theme(plot.title = element_text(size=5.7))
+
+box_x3 = ggplot(aes(quality, citric.acid), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") + 
+  ggtitle("Boxplot of Citric Acid vs Quality") + theme(plot.title = element_text(size=6))
+
+box_x4 = ggplot(aes(quality, residual.sugar), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") +
+  ggtitle("Boxplot of Residual Sugar vs Quality") + theme(plot.title = element_text(size=6))
+
+box_x5 = ggplot(aes(quality, chlorides), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") +
+  ggtitle("Boxplot of Chlorides vs Quality") + theme(plot.title = element_text(size=6.5))
+
+box_x6 = ggplot(aes(quality, free.sulfur.dioxide), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") +
+  ggtitle("Boxplot of Free Sulfur Dioxide vs Quality") + theme(plot.title = element_text(size=4.7))
+
+box_x7 = ggplot(aes(quality, total.sulfur.dioxide), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") +
+  ggtitle("Boxplot of Total Sulfur Dioxide vs Quality") + theme(plot.title = element_text(size=4.7))
+
+box_x8 = ggplot(aes(quality, density), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") +
+  ggtitle("Boxplot of Density vs Quality") + theme(plot.title = element_text(size=6))
+
+box_x9 = ggplot(aes(quality, pH), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") +
+  ggtitle("Boxplot of pH vs Quality") + theme(plot.title = element_text(size=7))
+
+box_x10 = ggplot(aes(quality, sulphates), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") + 
+  ggtitle("Boxplot of Sulphates vs Quality") + theme(plot.title = element_text(size=6.5))
+
+box_x11 = ggplot(aes(quality, alcohol), data = red.wine) + 
+  geom_boxplot(aes(group = quality), fill = "firebrick3") + 
+  ggtitle("Boxplot of Alcohol vs Quality") + theme(plot.title = element_text(size=7))
+```
+
+```{r}
+grid.arrange(hist_y, box_x1, box_x2, box_x3, box_x4, box_x5, box_x6, box_x7, box_x8, box_x9, box_x10, box_x11, ncol = 4)
+```
 
 # Methods
 
