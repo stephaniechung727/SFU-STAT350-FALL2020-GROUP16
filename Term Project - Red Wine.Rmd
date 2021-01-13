@@ -1,0 +1,857 @@
+---
+title: "STAT350 Final Project - Team 16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<br />
+
+# Abstract
+This exploratory data analysis will be examining data pertaining to the red variety of the Portugese "Vinho Verde" wine.
+Our analysis will begin by graphically representing the data in order to learn more about it. By constructing visualizations, we will determine the types of relationships between the independent variables and the dependent variable quality. From there, we will be fitting the data to a linear model, and analyzing the residuals.  We will then perform variable selection to end up with a model that contains only significant independent variables. Finally, we will perform cross validation to determine the efficacy of our model.  By constructing a model containing significant variables, we hope to determine which physiochemical variables are most important in determining the quality of a wine.
+
+# Introduction
+The "Vinho Verde" red wine dataset contains 12 variables and 1599 unique observations. Due to privacy limitations, this data only contains the output variable quality and 11 physiochemical variables.  All of the physiochemical variables are of the numeric class, while the dependent variable quality is an integer.
+
+<br />
+
+> About the Variables
+
+* Fixed acidity: Fixed or nonvolatile acids involved with wine
+* Volatile acidity: Amount of acetic acid in wine - large amounts may give wine a vinegary taste
+* Citric acid: Acid that adds freshness and flavor to wines, normally found in small quantities
+* Residual sugar: Amount of sugar remaining after fermentation stops
+* Chlorides: Amount of salt in the wine
+* Free sulfur dioxide: Free form of sulfur dioxide that prevents microbial growth and the oxidation of wine
+* Total sulfur dioxide: Amount of free and bound forms of sulfur dioxide
+* Density: Density of water depending on the percent alcohol and sugar content 
+* pH: Acidity of a wine on a scale from 0 to 14 - most wines are between 3 or 4
+* Sulphates: Wine additive that acts as an antimicrobial and antioxidant
+* Alcohol: Percent alcohol content of wine
+
+<br />
+
+> Libraries
+
+Here are the libraries that we used in this project. 
+
+```{r, results='hide', warning = FALSE, message = FALSE}
+library(latexpdf)
+library(stringr)
+library(ggplot2)
+library(gridExtra)
+library(faraway)
+library(MASS)
+library(olsrr)
+library(Metrics)
+library(caret)
+```
+<br />
+
+# Data Description
+
+> About the Data
+
+First, we will read the red wine data and look at the fundamentals of the data. 
+
+```{r, eval=TRUE}
+red.wine = read.csv("winequality-red.csv", header=TRUE, sep=";")
+head(red.wine)
+names(red.wine)
+dim(red.wine)
+sapply(red.wine, class)
+red.info = summary(red.wine)
+red.info
+table(is.na(red.wine))
+```
+<br />
+Include some basic descriptions including the class and the descriptive statistics of the variables. 
++ Missing value
+
+<br />
+
+> Data Visualization - Histograms
+
+Data visualization is one of the simplest way to understand our dataset. Histograms or boxplots plot not only the shape of individual variables but also the relationship between them. After this process, we will be able to keep in mind the approximate distribution of each regressors.   
+
+First, we will generate histograms for the all the variables. This will tell us the approximate distribution of each variables.
+
+```{r}
+hist_y = ggplot(aes(quality), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 1) +
+  ggtitle('Histogram of Quality') + theme(plot.title = element_text(size=9))
+
+hist_x1 = ggplot(aes(fixed.acidity), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.6) +
+  ggtitle('Histogram of Fixed Acidity') + theme(plot.title = element_text(size=8))
+
+hist_x2 = ggplot(aes(volatile.acidity), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.08) +
+  ggtitle('Histogram of Volatile Acidity') + theme(plot.title = element_text(size=7.5))
+
+hist_x3 = ggplot(aes(citric.acid), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.05) +
+  ggtitle('Histogram of Citric Acid') + theme(plot.title = element_text(size=8))
+
+hist_x4 = ggplot(aes(residual.sugar), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.5) +
+  ggtitle('Histogram of Residual Sugar') + theme(plot.title = element_text(size=6.7))
+
+hist_x5 = ggplot(aes(chlorides), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.05) +
+  ggtitle('Histogram of Chlorides') + theme(plot.title = element_text(size=8.5))
+
+hist_x6 = ggplot(aes(free.sulfur.dioxide), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 3) +
+  ggtitle('Histogram of Free Sulfur Dioxide') + theme(plot.title = element_text(size=6))
+
+hist_x7 = ggplot(aes(total.sulfur.dioxide), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 8.3) +
+  ggtitle('Histogram of Total Sulfur Dioxide') + theme(plot.title = element_text(size=6))
+
+hist_x8 = ggplot(aes(density), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.004) +
+  ggtitle('Histogram of Density') + theme(plot.title = element_text(size=9))
+
+hist_x9 = ggplot(aes(pH), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.09) +
+  ggtitle('Histogram of pH') + theme(plot.title = element_text(size=9))
+
+hist_x10 = ggplot(aes(sulphates), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.1) +
+  ggtitle('Histogram of Sulphates') + theme(plot.title = element_text(size=8))
+
+hist_x11 = ggplot(aes(alcohol), data = red.wine) +
+  geom_histogram(aes(color=I('black'), fill=I('firebrick')), binwidth = 0.3) +
+  ggtitle('Histogram of Alcohol') + theme(plot.title = element_text(size=9))
+
+grid.arrange(hist_y, hist_x1, hist_x2, hist_x3, hist_x4, hist_x5, hist_x6, hist_x7, hist_x8, hist_x9, hist_x10, hist_x11, ncol = 4, top="Histograms for Red Wine Data")
+
+```
+<br />
+
+
+There are a couple of things that we can see from the histograms above.
+
+* Quality variable seem to have a normal distribution, with most of the values concentrated in categories 5, 6, and 7. In other words, there are much more normal wines than excellent or poor ones.
+* Most of the variables have a very heavy right-tail, except for quality, pH, sulphates, and alcohol.
+* Some of the skewed data such as fixed acidity, volatile acidity, or citric acid can be normal when the outliers are detected and fixed.
+
+<br />
+
+
+> Data Visualization - Regressors vs. Predictor
+
+Now, we will plot each of the regressors against the predictor. This will help us see the approximate relationship between each varibles and wine quality.
+
+```{r}
+group_x1 = ggplot(aes(fixed.acidity, quality), data = red.wine) + 
+  ggtitle("Fixed Acidity vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+
+group_x2 = ggplot(aes(volatile.acidity, quality), data = red.wine) + 
+  ggtitle("Volatile Acidity vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=8.5))
+
+group_x3 = ggplot(aes(citric.acid, quality), data = red.wine) + 
+  ggtitle("Citric Acid vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+
+group_x4 = ggplot(aes(residual.sugar, quality), data = red.wine) + 
+  ggtitle("Residual Sugar vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=8))
+
+group_x5 = ggplot(aes(chlorides, quality), data = red.wine) + 
+  ggtitle("Chlorides vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+
+group_x6 = ggplot(aes(free.sulfur.dioxide, quality), data = red.wine) + 
+  ggtitle("Free Sulfur Dioxide vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=7))
+
+group_x7 = ggplot(aes(total.sulfur.dioxide, quality), data = red.wine) + 
+  ggtitle("Total Sulfur Dioxide vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=6.5))
+
+group_x8 = ggplot(aes(density, quality), data = red.wine) + 
+  ggtitle("Density vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+
+group_x9 = ggplot(aes(pH, quality), data = red.wine) + 
+  ggtitle("pH vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") +  
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+
+group_x10 = ggplot(aes(sulphates, quality), data = red.wine) + 
+  ggtitle("Sulphates vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+
+group_x11 = ggplot(aes(alcohol, quality), data = red.wine) + 
+  ggtitle("Alcohol vs Quality") +
+  geom_jitter(width = 0.25, alpha = 0.1, colour = "firebrick3") + 
+  geom_smooth(method = "lm", se = FALSE, colour = "black") + theme(plot.title = element_text(size=9))
+```
+
+```{r, message = FALSE}
+grid.arrange(group_x1, group_x2, group_x3, group_x4, group_x5, group_x6, group_x7, group_x8, group_x9, group_x10, group_x11, ncol = 4)
+```
+<br />
+
+
+There are a couple of things that we can see from the plots above.
+
+* Fixed acidity, citric acid, sulphates, and alcohol have a positive relationship with quality.
+* Volatile acidity, total sulfur dioxide, and pH have a negative relationship with quality.
+* Rest of the data shows a fairly random pattern.
+
+<br />
+
+
+> Data Visualization - Boxplots 
+
+Now, we will generate boxplots of each variable and see more closely of the distribution of variables.
+
+```{r}
+par(mfrow = c(3,4))
+boxplot(red.wine$quality, col="slategray2", pch=19, xlab = "quality")
+boxplot(red.wine$fixed.acidity, col="slategray2", pch=19, xlab = "Fixed Acidity")
+boxplot(red.wine$volatile.acidity, col="slategray2", pch=19, xlab = "Volatile Acidity")
+boxplot(red.wine$citric.acid, col="slategray2", pch=19, xlab = "Citric Acid")
+boxplot(red.wine$residual.sugar, col="slategray2", pch=19, xlab = "Residual Sugar")
+boxplot(red.wine$chlorides, col="slategray2", pch=19, xlab = "Chlorides")
+boxplot(red.wine$free.sulfur.dioxide, col="slategray2", pch=19, xlab = "Free Sulfur Dioxide")
+boxplot(red.wine$total.sulfur.dioxide, col="slategray2", pch=19, xlab = "Total Sulfur Dioxide")
+boxplot(red.wine$density, col="slategray2", pch=19, xlab = "Density")
+boxplot(red.wine$pH, col="slategray2", pch=19, xlab = "pH")
+boxplot(red.wine$sulphates, col="slategray2", pch=19, xlab = "Sulphates")
+boxplot(red.wine$alcohol, col="slategray2", pch=19, xlab = "Alcohol")
+```
+<br />
+
+
+There are a couple of things that we can see from the boxplots above.
+
+* Citric acid, free sulfur dioxide, total sulfur dioxide, and alcohol are right-skewed. The skewness of the data would not be fixed even after eliminating the outliers.
+* For other variables, detecting the outliers and fixing them will make the distribution more symmetric. However, some of the outliers seem very far away from the data.
+* Except for density, most of the outliers are on the larger side of the data.
+
+<br />
+
+> New Additional Data Point
+
+Before we begin the data analysis, we will introduce the median point as a new additional data point to the red wine data.
+
+```{r}
+red.datapoints = vector(mode = 'numeric', length = 12)
+red.datapoints = c(2.60, 0, 0, 0.3, 0.001, 0, 3, 0.75, 0.740, 0.11, 6.40, 1)
+red.wine = rbind(red.wine, red.datapoints)
+summary(red.wine)
+```
+<br />
+We now introduced the small outlier as a new point to the red wine quality data.
+
+<br />
+
+
+# Methods
+<br />
+
+## Multiple Linear Regression - Full Model
+
+> Pairs Plot
+
+First, with red wine, conduct a pairs plot to see if there are any particular patterns.
+
+```{r}
+pairs(red.wine, main = "Pairs Plot of Red Wine")
+```
+
+The pairs plot tells us a bit about the relationship between variables in the dataset. Specifically, we can see that a linear model seems appropriate, although some of the variables seem to have less of a linear relationship (we can look into that by conducting hypothesis tests). Also, we have to keep in mind of the multicollinearity present among the explanatory variables. Now, we will conduct a linear regression against the quality of the red wine.
+
+<br />
+
+> Fitting Into a Linear Model
+
+```{r}
+red.mdl = lm(quality~., data=red.wine)
+red.sum = summary(red.mdl)
+```
+<br />
+
+There are a couple of things that we notice from the summary of the linear model. 
+
+* Fixed acidity, residual sugar, free sulfur dioxide, sulphates, and alcohol have a positive relationship with red wine quality.
+* Volatile acidity, citric acid, chlorides, total sulfur dioxide, density, and pH have a negative relationship with red wine quality.
+* The P-value of the overall regression is significantly small, which suggests that there is a linear association between at least one of the regressors and the red wine quality.
+* The adjusted R-squared value is 0.3561 (35.61%), which implies that our linear model fit to the data is not satisfactory. In fact, only 35% of the data can be explained by the model.
+* Looking at the individual P-values, fixed acidity, citric acid, residual sugar and density seem to be insignificant given that all the other variables are in the model. 
+
+<br />
+
+
+> Anova Test
+
+In order to see if some of the regressors are insignificant to the regression, we will first run the anova test.
+
+```{r}
+anova(red.mdl)
+```
+<br />
+The anova test conducts a partial F-test, and supports our hypothesis that citric acid and residual sugar variable seem to be insiginificant to the linear model given that the variables before them are already included in the model.
+
+To check which of the variables must be selected in building the model, we will conduct a variable selection later on.
+
+<br />
+
+> Multicollinearity
+
+In the pairs plot above, we suspected that there may be near linear relationship between some of the regressor variables in the data. We will conduct a diagnostics since multicollinearity will cause a serious problem that may dramatically impact the usefulness of the linear model. We will use the variance inflation factor (VIF) to check.
+
+```{r}
+vif(red.mdl)
+```
+<br />
+Although VIF for fixed acidity are large, but it is not larger than 10, the rule-of-thumb that our textbook suggests. In fact, none of the VIFs are larger than 10, so we will conclude that there are no serious issues regarding multicollinearity. 
+
+<br />
+
+## Model Assessment
+
+> Residual Analysis
+
+We will first go over the graphic analysis of the residuals to check if the error are i.i.d. normally distributed, with zero mean and constant variance.
+
+<br />
+
+
+##### Residual vs. Fitted
+
+```{r}
+plot(red.mdl, which=1)
+```
+
+<br />
+
+Comments on the residual vs. fitted plot
+
+<br />
+
+
+##### Normal Q-Q
+
+```{r}
+plot(red.mdl, which=2)
+```
+
+<br />
+
+We observe that the residuals for our model meet the normality assumption. There seems to be a slight negative skew to the distribution of the residuals, although it is not too much of a concern. Also, there are some potential influential points. We will look at this in a moment. 
+
+<br />
+
+
+##### Scale-Location
+
+```{r}
+plot(red.mdl, which=3)
+```
+
+<br />
+
+Comments on the Scale-Location Plot
+
+<br />
+
+
+##### Residuals vs. Leverage
+
+```{r}
+plot(red.mdl, which=5)
+```
+
+<br />
+
+Comments on the Residuals vs. Leverage Plot
+
+<br />
+
+
+##### Overall Residual Plots
+
+```{r}
+par(mfrow=c(2,2))
+plot(red.mdl, which=1)
+plot(red.mdl, which=2)
+plot(red.mdl, which=3)
+plot(red.mdl, which=5)
+```
+
+<br />
+
+Comments on the Residuals vs. Leverage Plot
+
+<br />
+
+> Outlier Detection
+
+Outliers are data points that are not typical of the rest of the data. They can either improve or worsen the fit of the equation, so it is important to investigate each outliers or potential influential points.
+
+For the outlier detection, we are going to use externally studentized residuals and plot them against various values.
+
+```{r}
+ti = rstudent(red.mdl)
+plot(red.mdl$fitted.values, ti, xlab = "Fitted Values", ylab="Externally Studentized Residuals",
+     main="Studentized Residuals vs. Fitted Values (Red Wine)")
+```
+
+<br />
+
+Identifying the points on the plot, 1600th and 833rd observations potential outliers. 
+To investigate the influence of these points on the model, we will obtain an equation with these two observations deleted.
+
+<br />
+
+```{r}
+red.wine.out = red.wine[-c(1600,833), ]
+red.mdl.out = lm(quality ~ . , data=red.wine.out)
+red.sum = summary(red.mdl)
+red.sum.out = summary(red.mdl.out)
+red.mse = mean(red.sum$residuals^2)
+red.mse.out = mean(red.sum.out$residuals^2)
+red.sum
+red.sum.out
+red.mse
+red.mse.out
+```
+<br />
+Deleting the potential outlier points has almost no effect on the estimates of the regression coefficients nor on the residual mean square. In fact, deleting the points causes a slight decrease in $R^2$, even though the increase does not seem significant. Hence, we conclude that points 1600 and 833 are not influential.
+
+Based on the information we acquired from both the residuals vs. fitted values, we may say that the deficiency of the model is due to trying to fit a discrete quality value to a continuous data. 
+
+<br />
+
+> Outlier Diagnostics : Cook's Distance
+
+Cook's distance is one of the ways to measure a point's influence by considering both the location of a point in the x space and the response variable.
+
+Points with large values of $D_i$ can be interpreted as an influential point.
+
+```{r}
+red.cooksd = cooks.distance(red.mdl)
+max.di = max(red.cooksd)
+max.di
+plot(red.cooksd, pch="*", cex=2, ylab = "Cook's Distance", main="Influential Observations by Cook's Distance for Red Wine") 
+abline(h = 10*mean(red.cooksd, na.rm=T), col="red")  # adding the cutoff line
+text(x=1:length(red.cooksd)+1, y=red.cooksd, labels=ifelse(red.cooksd>10*mean(red.cooksd, na.rm=T),names(red.cooksd),""), col="red")
+```
+<br />
+
+When interpreting Cook's distance, we categorize the values as follows:
+
+* $D_i$ > 0.5 : The $i_{th}$ data point is worthy of further investigation as influential
+* $D_i$ > 1 : The $i_{th}$ data point is quite likely to be influential
+* If $D_i$ sticks out from the other values, it is most likely to be influential
+
+The maximum value for the Cook's distance is 16.40488, which is a large value.
+
+<br />
+
+## Transformation
+
+Previously, the summary of the full model has told us that our model is not doing a good job in fitting the data. And while analyzing the residuals, we realized the fact that fitting a discrete data into a continuous model may be causing such problem. 
+
+Before we go into transforamtion on ordinal variables, we will try some conventional transformations.
+
+> Log Transformation
+
+First, let's try a log transformation to see if it will improve our regression.
+
+```{r}
+red.log = lm(log(quality) ~ ., data=red.wine.inf)
+red.log.sum = summary(red.log)
+red.sum.inf
+red.log.sum
+```
+<br />
+By taking logarthims of quality values, estimates of each of the coefficients changed quite a lot. However, the log transformation decreased the $R^2$ value, which is not good.
+
+Since our goal was to improve the model to better fit the data, we will skip further analysis on the log transformation model and move on.
+
+<br />
+
+> Square-Root Transformation
+
+Next, we will do a square-root transformation to see if it will improve our regression.
+
+```{r}
+red.sqr = lm(sqrt(quality) ~ ., data=red.wine.inf)
+red.sqr.sum = summary(red.sqr)
+red.sum.inf
+red.sqr.sum
+```
+<br />
+By taking the square-root of quality values, estimates of each of the coefficients changed quite a lot. However, the square-root transformation decreased the $R^2$ value, which is not good.
+
+Since our goal was to improve the model to better fit the data, we will skip further analysis on the square-root transformation model and move on.
+
+<br />
+
+
+## Variable Selection
+
+As we saw in the beginning, some of the variables did not seem significant to our model. Since incorrect model specification can cause serious problems, we will try to find the most appropriate subset of regressors for our model. 
+
+We will first define all the possible candidates then compare their adjusted $R^2$ values.
+
+<br />
+
+#### Best Subset Regression
+
+First step in choosing the best set of regressors for our model, we will fit all the regression equations involving one, two regressors, and so on. Then we will select the subset of predictors that do the best at meeting some well-defined objective criterion, such as a large adjusted $R^2$ value or the small MSE, Mallow's $C_p$, or AIC.
+
+```{r}
+red.ols = ols_step_best_subset(red.mdl.inf)
+red.ols
+plot(red.ols)
+best.red = lm(quality ~ volatile.acidity + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + pH                + sulphates + alcohol, data=red.wine.inf)
+best.red.sum = summary(best.red)
+best.red.sum
+```
+<br />
+Looking at the plots above, the increase in $R^2$ and Adjusted $R^2$ almost flattens by model 7. In fact, change in Mallow's $C_p$ statistic and AIC drastically decreases at model 7 as well. 
+
+Hence, best subset regression tells us that model 7, which has the following variables:
+
+* volatile acidity
+* chlorides
+* free sulfur dioxide
+* total sulfur dioxide
+* pH
+* sulphates
+* alcohol
+
+best meet our criterion, which perfectly aligns with our expectation we had when we saw the large P-values in the full model.
+
+<br />
+
+#### Stepwise Regression Methods
+
+Since comparing all possible regressions and the best subsets take a lot of time and work, we will choose only a few models by adding or deleting regressors one at a time. Here, keep in mind that we used AIC values to compare each steps.
+
+<br />
+
+> Forward Selection
+
+Start with a model with no regressors included, then we will add regressors as we go on.
+
+```{r}
+start.mdl = lm(quality~1, data=red.wine.inf)
+scope.mdl = lm(quality~., data=red.wine.inf)
+step(start.mdl, direction = "forward", scope=formula(scope.mdl))
+forward.red= lm(quality ~ alcohol + volatile.acidity + sulphates + 
+    total.sulfur.dioxide + chlorides + pH + free.sulfur.dioxide, 
+    data = red.wine.inf)
+forward.red.sum = summary(forward.red)
+forward.red.sum
+```
+<br />
+Our final model has 7 of the 11 possible predictors (written in the order they were added):
+
+* alcohol
+* volatile acidity
+* sulphates
+* total sulfur dioxide
+* chlorides
+* pH
+* free sulfur dioxide
+
+Coincidentally, the chosen 7 variables are identical as our choice for best subsets regression.
+
+<br />
+
+> Backward Elimination
+
+Start with a model with all the regressors included, then we will eliminate the insignificant regressors as we go on.
+
+```{r}
+start.mdl2 = lm(quality~., data=red.wine.inf)
+step(start.mdl2, direction = "backward")
+backward.red = lm(quality ~ volatile.acidity + chlorides + free.sulfur.dioxide + 
+    total.sulfur.dioxide + pH + sulphates + alcohol, data = red.wine.inf)
+backward.red.sum = summary(backward.red)
+backward.red.sum
+```
+<br />
+Our final model has 7 of the 11 possible predictors (written in their order in the model):
+
+* volatile acidity
+* chlorides
+* free sulfur dioxide
+* total sulfur dioxide
+* pH
+* sulphates
+* alcohol
+
+Again, the chosen 7 variables are identical as our choice for best subsets regression and forward selection.
+
+<br />
+
+> Stepwise Regression
+
+Repeat forward selection and backward elimination.
+
+```{r}
+step(red.mdl.inf, direction= "both")
+both.red = lm(quality ~ volatile.acidity + chlorides + free.sulfur.dioxide + 
+    total.sulfur.dioxide + pH + sulphates + alcohol, data = red.wine.inf)
+both.red.sum = summary(both.red)
+both.red.sum
+```
+<br />
+Our final model has 7 of the 11 possible predictors (written in their order in the model):
+
+* volatile acidity
+* chlorides
+* free sulfur dioxide
+* total sulfur dioxide
+* pH
+* sulphates
+* alcohol
+
+As it turns out, the chosen 7 variables are identical for all our variable selection methods.
+
+<br />
+
+Now, let's compare all our models by their adjusted $R^2$.
+
+```{r}
+# Adjusted R-squared for the full model
+red.rsq = red.sum.inf$adj.r.squared
+red.rsq
+
+# Adjusted R-squared for best subset regression model
+best.red.rsq = best.red.sum$adj.r.squared
+best.red.rsq
+
+# Adjusted R-squared for forward selection model
+forward.red.rsq = forward.red.sum$adj.r.squared
+forward.red.rsq
+
+# Adjusted R-squared for backward elimination model
+backward.red.rsq = backward.red.sum$adj.r.squared
+backward.red.rsq
+
+# Adjusted R-squared for stepwise regression model
+both.red.rsq = both.red.sum$adj.r.squared
+both.red.rsq
+```
+<br />
+Clearly, even after selecting the appropriate regressors, the adjusted $R^2$ did not improve. In other words, the subset models do not show much of a higher performance. In fact, as we saw above, all the variable selection models choose the same 7 variables and even generates equal adjusted $R^2$ values.
+
+Hence, from now on, the best model used will be 
+
+Quality = $\beta_0$ + $\beta_1$ * volatile acidity + $\beta_2$ * chlorides + $\beta_3$ * free sulfur dioxide + $\beta_4$ * total sulfur dioxide + $\beta_5$ * pH + $\beta_6$ * sulphates + $\beta_7$ * alcohol. 
+
+However, although these are all the variable selection method we learned, we should always keep in mind that there will be several equally good models. That is, we might be ignorant of the background knowledge of the collected data, i.e. there may be a whole other variable that affects wine quality.
+
+With that in mind, we will assess our final model by investigating the residual plots.
+
+<br />
+
+#### Residual Analysis
+
+```{r}
+fin.red = lm(quality ~ volatile.acidity + chlorides + free.sulfur.dioxide + 
+    total.sulfur.dioxide + pH + sulphates + alcohol, data = red.wine.inf)
+```
+
+<br />
+
+##### Residual vs. Fitted
+
+```{r}
+plot(fin.red, which=1)
+```
+
+<br />
+
+Comments on the residual vs. fitted plot
+
+<br />
+
+
+##### Normal Q-Q
+
+```{r}
+plot(fin.red, which=2)
+```
+
+<br />
+
+We observe that the residuals for our model meet the normality assumption. The negative skew that we saw in the full model has reduced, which is a good thing.
+
+<br />
+
+
+##### Scale-Location
+
+```{r}
+plot(fin.red, which=3)
+```
+
+<br />
+
+Comments on the Scale-Location Plot
+
+<br />
+
+
+##### Residuals vs. Leverage
+
+```{r}
+plot(fin.red, which=5)
+```
+
+<br />
+
+Comments on the Residuals vs. Leverage Plot
+
+<br />
+
+
+##### Overall Residual Plots
+
+```{r}
+par(mfrow = c(2,2))
+plot(fin.red, which=1)
+plot(fin.red, which=2)
+plot(fin.red, which=3)
+plot(fin.red, which=5)
+```
+
+<br />
+
+
+> Cook's Distance
+
+```{r}
+red.cooksd2 = cooks.distance(fin.red)
+max.di2 = max(red.cooksd2)
+max.di2
+plot(red.cooksd2, pch="*", cex=2, ylab = "Cook's Distance", main="Influential Observations by Cook's Distance for Red Wine") 
+abline(h = 10*mean(red.cooksd2, na.rm=T), col="red")  # adding the cutoff line
+text(x=1:length(red.cooksd2)+1, y=red.cooksd2, labels=ifelse(red.cooksd2>10*mean(red.cooksd2, na.rm=T),names(red.cooksd2),""), col="red")
+```
+## Model Validation
+
+Before we jump to any conclusions, we should check the validity of our model. There is a good chance that this data was made so that one can predict the quality of a wine based on specific chemical attributes. 
+
+We will perform cross validation in order to see how well our model predicts the quality of red wine. We do this by dividing the dataset in such a way that 80 percent of the dataset is part of the training set and 20 percent of the dataset is the testing set. 
+
+Then we will compare the actual value to the predicted value. We repeat the steps of validation 5 times to check the values of R squared, root mean square error and mean absolute error, which will tell us how the model behaves.
+
+<br />
+
+> Cross Validation - Final Model
+
+Next, let's take a look at the prediction power of our final model with selected regressors.
+
+```{r}
+set.seed(71168)
+sample.n = ceiling(0.8*length(red.wine.inf$quality))
+
+par(mfrow = c(3,3))
+
+for(i in 1:5){
+  train.sample = sample(c(1:length(red.wine.inf$quality)),sample.n)
+  train.sample = sort(train.sample)
+  
+  train.data = red.wine.inf[train.sample,]
+  test.data = red.wine.inf[-train.sample,]
+  
+  train.fin = lm(quality ~ volatile.acidity + chlorides + free.sulfur.dioxide + 
+    total.sulfur.dioxide + pH + sulphates + alcohol, data = train.data)
+  summary(train.fin) 
+  
+  preds.fin = predict(train.fin,test.data)
+  
+  plot(test.data$quality,preds.fin,xlim=c(4,10),ylim=c(4,10))
+  abline(c(0,1))
+  
+  # R-squared
+  R.sq = R2(preds.fin, test.data$quality)
+  
+  #RMSPE
+  RMSPE = RMSE(preds.fin, test.data$quality)
+  
+  #MAPE
+  MAPE = MAE(preds.fin, test.data$quality)
+  
+  print(c(i,R.sq,RMSPE,MAPE))
+}
+```
+<br />
+
+Both the numerical and graphical observations do not have a lot of difference from our full model.
+
+Hence we conclude that both our models have no prediction powers.
+
+<br />
+
+# Conclusion
+
+Because the dataset only contains physiochemical variables assosciated with the wine, we do not have the full picture.  Additional variables could help us paint a better picture of how the quality of the wine is affected.
+
+For example, take the grape.  What is the type of grape?  What region is it from?  What is the quality or pH of the soil it was grown in?  How does the quality of grape compare to past harvests?
+
+What was the length of fermentation?  What was the average temperature during the fermentation process?  What was the size of the batch?
+
+All of this additional information could help us to understand better the resulting effect on the quality of wine.  As shown from our analysis, we unfortunately can't come up with a model that accurately predicts the quality of wine given only the variables provided.
+
+# References
+
+Here are the works cited.
+
+Montgomery, D. C., Peck, E. A., & Vining, G. G. (2012). *Introduction to Linear Regression Analysis - 5th ed.* Hoboken, New Jersey: John Wiley & Sons, Inc.
+
+P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. *Modeling wine preferences by data mining from physicochemical properties.* In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
